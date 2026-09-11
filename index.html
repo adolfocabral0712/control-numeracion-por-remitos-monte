@@ -95,7 +95,7 @@
     function formatearHora(valor) {
       const texto = String(valor ?? "").trim();
       if (!texto) return "";
-      const coincidencia = texto.match(/^(\d{1,2}):(\d{2})/);
+      const coincidencia = texto.match(/(?:^|[ T])(\d{1,2}):(\d{2})(?::\d{2})?/);
       return coincidencia
         ? `${coincidencia[1].padStart(2, "0")}:${coincidencia[2]}`
         : texto;
