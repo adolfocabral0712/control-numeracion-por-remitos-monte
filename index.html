@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Remitos de Origen</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Cpath d='M17 15h30v34H17z' fill='white'/%3E%3Cpath d='M23 24h18M23 32h18M23 40h12' stroke='%231d4ed8' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <style>
+    :root { --azul:#1d4ed8; --azul-oscuro:#163d9f; --azul-suave:#dbeafe; --fondo:#eef2f7; --blanco:#fff; --texto:#172033; --suave:#64748b; --borde:#cbd5e1; --alternada:#f8fafc; --hover:#dbeafe; }
+    * { box-sizing:border-box; }
+    html, body { width:100%; height:100%; margin:0; }
+    body { overflow:hidden; background:var(--fondo); color:var(--texto); font-family:Arial,Helvetica,sans-serif; }
+    .pagina { display:flex; flex-direction:column; width:100%; height:100vh; height:100dvh; padding:16px; gap:12px; }
+    .encabezado { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:15px 18px; background:var(--blanco); border:1px solid var(--borde); border-radius:12px; box-shadow:0 4px 14px rgba(15,23,42,.07); }
+    h1 { margin:0; color:var(--azul-oscuro); font-size:1.35rem; line-height:1.2; }
+    .actualizacion { margin-top:5px; color:var(--suave); font-size:.88rem; }
+    .contador { flex:0 0 auto; min-width:145px; padding:10px 14px; text-align:center; background:var(--azul-suave); color:var(--azul-oscuro); border:1px solid #93c5fd; border-radius:10px; }
+    .contador-numero { display:block; font-size:1.35rem; font-weight:700; }
+    .contador-texto { display:block; margin-top:2px; font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+    .estado { display:none; flex:0 0 auto; padding:11px 14px; border-radius:8px; font-size:.9rem; font-weight:700; }
+    .estado.visible { display:block; }
+    .estado.error { color:#991b1b; background:#fee2e2; border:1px solid #fca5a5; }
+    .tabla-contenedor { flex:1 1 auto; min-width:0; min-height:0; overflow:auto; scrollbar-gutter:stable; background:var(--blanco); border:1px solid var(--borde); border-radius:12px; box-shadow:0 4px 14px rgba(15,23,42,.07); }
+    table { width:max-content; min-width:100%; border-collapse:separate; border-spacing:0; font-size:.82rem; }
+    thead { position:sticky; top:0; z-index:10; }
+    th { padding:11px 12px; white-space:nowrap; text-align:center; color:#fff; background:var(--azul); border-right:1px solid rgba(255,255,255,.25); border-bottom:1px solid var(--azul-oscuro); }
+    td { padding:9px 12px; white-space:nowrap; text-align:center; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; }
+    th:last-child, td:last-child { border-right:0; }
+    tbody tr:nth-child(even) { background:var(--alternada); }
+    tbody tr:hover { background:var(--hover); }
+    .cargando td, .sin-datos td { height:130px; color:var(--suave); font-size:1rem; text-align:center; }
+    .tabla-contenedor::-webkit-scrollbar { width:14px; height:14px; }
+    .tabla-contenedor::-webkit-scrollbar-track { background:#e2e8f0; }
+    .tabla-contenedor::-webkit-scrollbar-thumb { background:#64748b; border:3px solid #e2e8f0; border-radius:10px; }
+    .tabla-contenedor::-webkit-scrollbar-thumb:hover { background:#475569; }
+    @media (max-width:700px) {
+      .pagina { padding:8px; gap:8px; }
+      .encabezado { align-items:stretch; flex-direction:column; padding:12px; gap:10px; }
+      h1, .actualizacion { text-align:center; }
+      h1 { font-size:1.08rem; }
+      .contador { width:100%; }
+      table { font-size:.75rem; }
+      th, td { padding:8px 9px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="pagina">
+    <header class="encabezado">
+      <div>
+        <h1>Control de Remitos de Origen</h1>
+        <div id="actualizacion" class="actualizacion">Cargando información...</div>
+      </div>
+      <div class="contador">
+        <span id="cantidad" class="contador-numero">0</span>
+        <span class="contador-texto">Registros</span>
+      </div>
+    </header>
+    <div id="estado" class="estado" role="alert"></div>
+    <section class="tabla-contenedor" aria-label="Listado de remitos de origen">
+      <table>
+        <thead><tr id="encabezados"></tr></thead>
+        <tbody id="cuerpo-tabla"><tr class="cargando"><td>Cargando datos...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+  <script>
+    const JSON_URL = "https://dl.dropbox.com/scl/fi/f0s5t8uwgbr275fyggvbk/ControlRemitosOrigen.json?rlkey=k0ygvtoajiwl2x542rpdez1c3&dl=1";
+    const encabezadosElemento = document.getElementById("encabezados");
+    const cuerpoElemento = document.getElementById("cuerpo-tabla");
+    const actualizacionElemento = document.getElementById("actualizacion");
+    const cantidadElemento = document.getElementById("cantidad");
+    const estadoElemento = document.getElementById("estado");
+
+    const nombreVisible = columna => String(columna).replaceAll("_", " ").toUpperCase();
+    const mostrarValor = valor => valor === null || valor === undefined || valor === "" ? "" : String(valor);
+
+    function mostrarError(mensaje) {
+      encabezadosElemento.replaceChildren();
+      cuerpoElemento.replaceChildren();
+      const fila = document.createElement("tr");
+      fila.className = "sin-datos";
+      const celda = document.createElement("td");
+      celda.textContent = "No fue posible cargar los datos.";
+      fila.appendChild(celda);
+      cuerpoElemento.appendChild(fila);
+      estadoElemento.textContent = mensaje;
+      estadoElemento.className = "estado error visible";
+      actualizacionElemento.textContent = "Información no disponible";
+      cantidadElemento.textContent = "0";
+    }
+
+    function construirEncabezados(columnas) {
+      encabezadosElemento.replaceChildren();
+      const fragmento = document.createDocumentFragment();
+      columnas.forEach(columna => {
+        const th = document.createElement("th");
+        th.scope = "col";
+        th.textContent = nombreVisible(columna);
+        fragmento.appendChild(th);
+      });
+      encabezadosElemento.appendChild(fragmento);
+    }
+
+    function construirFilas(columnas, registros) {
+      cuerpoElemento.replaceChildren();
+      if (!registros.length) {
+        const fila = document.createElement("tr");
+        fila.className = "sin-datos";
+        const celda = document.createElement("td");
+        celda.colSpan = Math.max(columnas.length, 1);
+        celda.textContent = "No hay registros para mostrar.";
+        fila.appendChild(celda);
+        cuerpoElemento.appendChild(fila);
+        return;
+      }
+      const fragmento = document.createDocumentFragment();
+      registros.forEach(registro => {
+        const fila = document.createElement("tr");
+        columnas.forEach(columna => {
+          const celda = document.createElement("td");
+          const valor = mostrarValor(registro[columna]);
+          celda.textContent = valor;
+          celda.title = valor;
+          fila.appendChild(celda);
+        });
+        fragmento.appendChild(fila);
+      });
+      cuerpoElemento.appendChild(fragmento);
+    }
+
+    async function cargarDatos() {
+      try {
+        estadoElemento.className = "estado";
+        const respuesta = await fetch(`${JSON_URL}&t=${Date.now()}`, { cache:"no-store", headers:{ Accept:"application/json" } });
+        if (!respuesta.ok) throw new Error(`Estado ${respuesta.status}`);
+        const contenido = await respuesta.json();
+        const registros = Array.isArray(contenido.datos) ? contenido.datos : [];
+        let columnas = Array.isArray(contenido.columnas) ? contenido.columnas : [];
+        if (!columnas.length && registros.length) columnas = Object.keys(registros[0]);
+        construirEncabezados(columnas);
+        construirFilas(columnas, registros);
+        cantidadElemento.textContent = Number(contenido.cantidad_registros ?? registros.length).toLocaleString("es-UY");
+        actualizacionElemento.textContent = contenido.actualizado ? `Actualizado: ${contenido.actualizado}` : "Actualización sin fecha informada";
+      } catch (error) {
+        console.error(error);
+        mostrarError("No se pudo leer el JSON de Dropbox. Comprueba que el enlace continúe siendo público.");
+      }
+    }
+
+    cargarDatos();
+  </script>
+</body>
+</html>
