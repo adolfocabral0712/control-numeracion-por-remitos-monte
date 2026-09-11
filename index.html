@@ -74,6 +74,7 @@
     const cantidadElemento = document.getElementById("cantidad");
     const estadoElemento = document.getElementById("estado");
     const COLUMNAS_CON_COLOR = new Set(["deposito", "certificacion", "origen", "nombreprod2"]);
+    const COLUMNAS_COLOR_COMPARTIDO = new Set(["cosecha", "sacada", "carga"]);
 
     const nombreVisible = columna => String(columna).replaceAll("_", " ").toUpperCase();
     function formatearFecha(valor) {
@@ -114,6 +115,30 @@
 
     function crearMapasColores(columnas, registros) {
       const mapas = new Map();
+
+      const columnasCompartidas = columnas.filter(columna =>
+        COLUMNAS_COLOR_COMPARTIDO.has(String(columna).toLowerCase())
+      );
+
+      const valoresCompartidos = [...new Set(
+        registros.flatMap(registro =>
+          columnasCompartidas.map(columna =>
+            mostrarValor(columna, registro[columna]).trim()
+          )
+        ).filter(Boolean)
+      )].sort((a, b) => a.localeCompare(b, "es", { sensitivity:"base" }));
+
+      const mapaCompartido = new Map();
+      valoresCompartidos.forEach((valor, indice) => {
+        const tono = (indice * 137.508 + 205) % 360;
+        const saturacion = 68 + (indice % 3) * 5;
+        const luminosidad = 82 + (indice % 2) * 5;
+        mapaCompartido.set(valor, `hsl(${tono.toFixed(2)} ${saturacion}% ${luminosidad}%)`);
+      });
+
+      columnasCompartidas.forEach(columna => {
+        mapas.set(String(columna).toLowerCase(), mapaCompartido);
+      });
 
       columnas.forEach(columna => {
         const nombre = String(columna).toLowerCase();
