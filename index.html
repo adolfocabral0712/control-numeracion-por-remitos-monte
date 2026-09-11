@@ -23,8 +23,8 @@
     .tabla-contenedor { flex:1 1 auto; min-width:0; min-height:0; overflow:auto; scrollbar-gutter:stable; background:var(--blanco); border:1px solid var(--borde); border-radius:12px; box-shadow:0 4px 14px rgba(15,23,42,.07); }
     table { width:max-content; min-width:max-content; table-layout:auto; border-collapse:separate; border-spacing:0; font-size:calc(.82rem - 2px); }
     thead { position:sticky; top:0; z-index:10; }
-    th { width:1%; padding:9px 7px; white-space:nowrap; text-align:center; color:#fff; background:var(--azul); border-right:1px solid rgba(255,255,255,.25); border-bottom:1px solid var(--azul-oscuro); }
-    td { width:1%; padding:7px; white-space:nowrap; text-align:center; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; }
+    th { width:1%; height:36px; padding:8px 7px; white-space:nowrap; text-align:center; line-height:1.35; vertical-align:middle; color:#fff; background:var(--azul); border-right:1px solid rgba(255,255,255,.25); border-bottom:1px solid var(--azul-oscuro); }
+    td { width:1%; height:32px; padding:6px 7px; white-space:nowrap; text-align:center; line-height:1.35; vertical-align:middle; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; }
     td.celda-color { font-weight:700; border-bottom-color:rgba(15,23,42,.16); }
     th:last-child, td:last-child { border-right:0; }
     tbody tr:nth-child(even) { background:var(--alternada); }
@@ -41,7 +41,8 @@
       h1 { font-size:1.08rem; }
       .contador { width:100%; }
       table { font-size:calc(.75rem - 2px); }
-      th, td { padding:7px 6px; }
+      th { height:34px; padding:7px 6px; }
+      td { height:30px; padding:5px 6px; }
     }
   </style>
 </head>
