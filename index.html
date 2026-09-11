@@ -86,7 +86,10 @@
     let columnasActuales = [];
     let registrosOriginales = [];
 
-    const nombreVisible = columna => String(columna).replaceAll("_", " ").toUpperCase();
+    const nombreVisible = columna => {
+      if (String(columna).toLowerCase() === "anio_mes") return "AÑO MES";
+      return String(columna).replaceAll("_", " ").toUpperCase();
+    };
     function formatearFecha(valor) {
       const texto = String(valor ?? "").trim();
       if (!texto) return "";
@@ -104,6 +107,32 @@
       }
 
       return texto;
+    }
+
+    function formatearAnioMes(valor) {
+      const texto = String(valor ?? "").trim();
+      if (!texto) return "";
+
+      const meses = [
+        "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO",
+        "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
+      ];
+
+      let coincidencia = texto.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if (coincidencia) {
+        const mes = Number(coincidencia[2]);
+        return mes >= 1 && mes <= 12 ? `${coincidencia[1]} ${meses[mes - 1]}` : "";
+      }
+
+      coincidencia = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+      if (coincidencia) {
+        const mes = Number(coincidencia[2]);
+        let anio = coincidencia[3];
+        if (anio.length === 2) anio = `20${anio}`;
+        return mes >= 1 && mes <= 12 ? `${anio} ${meses[mes - 1]}` : "";
+      }
+
+      return "";
     }
 
     function convertirFechaADias(valor) {
@@ -173,6 +202,7 @@
       if (valor === null || valor === undefined || valor === "") return "";
       const nombre = String(columna).toLowerCase();
       if (nombre === "fecharto") return formatearFecha(valor);
+      if (nombre === "anio_mes") return String(valor);
       if (nombre === "horarto" || nombre === "horasalida") return formatearHora(valor);
       return String(valor);
     }
@@ -365,10 +395,17 @@
         const respuesta = await fetch(`${JSON_URL}&t=${Date.now()}`, { cache:"no-store", headers:{ Accept:"application/json" } });
         if (!respuesta.ok) throw new Error(`Estado ${respuesta.status}`);
         const contenido = await respuesta.json();
-        const registros = Array.isArray(contenido.datos) ? contenido.datos : [];
+        const registrosFuente = Array.isArray(contenido.datos) ? contenido.datos : [];
+        const registros = registrosFuente.map(registro => ({
+          ...registro,
+          anio_mes: formatearAnioMes(registro.fecharto)
+        }));
         let columnas = Array.isArray(contenido.columnas) ? contenido.columnas : [];
         if (!columnas.length && registros.length) columnas = Object.keys(registros[0]);
         columnas = columnas.filter(columna => String(columna).toLowerCase() !== "nombrefas");
+        const posicionFecha = columnas.findIndex(columna => String(columna).toLowerCase() === "fecharto");
+        columnas = columnas.filter(columna => String(columna).toLowerCase() !== "anio_mes");
+        columnas.splice(posicionFecha >= 0 ? posicionFecha + 1 : 0, 0, "anio_mes");
         columnasActuales = columnas;
         registrosOriginales = registros;
         construirEncabezados(columnasActuales);
