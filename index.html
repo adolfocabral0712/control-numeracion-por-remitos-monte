@@ -24,6 +24,9 @@
     table { width:max-content; min-width:max-content; table-layout:auto; border-collapse:separate; border-spacing:0; font-size:calc(.82rem - 2px); }
     thead { position:sticky; top:0; z-index:10; }
     th { width:1%; height:36px; padding:8px 7px; white-space:nowrap; text-align:center; line-height:1.35; vertical-align:middle; color:#fff; background:var(--azul); border-right:1px solid rgba(255,255,255,.25); border-bottom:1px solid var(--azul-oscuro); }
+    .filtro-celda { height:34px; padding:4px; background:#dbeafe; border-right:1px solid #bfdbfe; border-bottom:1px solid #93c5fd; }
+    .filtro-select { width:100%; min-width:72px; height:26px; padding:2px 22px 2px 5px; color:#172033; background:#fff; border:1px solid #93c5fd; border-radius:5px; font:inherit; cursor:pointer; }
+    .filtro-select:focus { outline:2px solid #2563eb; outline-offset:1px; }
     td { width:1%; height:32px; padding:6px 7px; white-space:nowrap; text-align:center; line-height:1.35; vertical-align:middle; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; }
     td.celda-color { font-weight:700; border-bottom-color:rgba(15,23,42,.16); }
     th:last-child, td:last-child { border-right:0; }
@@ -61,7 +64,10 @@
     <div id="estado" class="estado" role="alert"></div>
     <section class="tabla-contenedor" aria-label="Listado de remitos de origen">
       <table>
-        <thead><tr id="encabezados"></tr></thead>
+        <thead>
+          <tr id="encabezados"></tr>
+          <tr id="filtros"></tr>
+        </thead>
         <tbody id="cuerpo-tabla"><tr class="cargando"><td>Cargando datos...</td></tr></tbody>
       </table>
     </section>
@@ -69,12 +75,15 @@
   <script>
     const JSON_URL = "https://dl.dropbox.com/scl/fi/f0s5t8uwgbr275fyggvbk/ControlRemitosOrigen.json?rlkey=k0ygvtoajiwl2x542rpdez1c3&dl=1";
     const encabezadosElemento = document.getElementById("encabezados");
+    const filtrosElemento = document.getElementById("filtros");
     const cuerpoElemento = document.getElementById("cuerpo-tabla");
     const actualizacionElemento = document.getElementById("actualizacion");
     const cantidadElemento = document.getElementById("cantidad");
     const estadoElemento = document.getElementById("estado");
     const COLUMNAS_CON_COLOR = new Set(["deposito", "certificacion", "origen", "nombreprod2"]);
     const COLUMNAS_COLOR_COMPARTIDO = new Set(["cosecha", "sacada", "carga"]);
+    let columnasActuales = [];
+    let registrosOriginales = [];
 
     const nombreVisible = columna => String(columna).replaceAll("_", " ").toUpperCase();
     function formatearFecha(valor) {
@@ -166,6 +175,7 @@
 
     function mostrarError(mensaje) {
       encabezadosElemento.replaceChildren();
+      filtrosElemento.replaceChildren();
       cuerpoElemento.replaceChildren();
       const fila = document.createElement("tr");
       fila.className = "sin-datos";
@@ -189,6 +199,66 @@
         fragmento.appendChild(th);
       });
       encabezadosElemento.appendChild(fragmento);
+    }
+
+    function construirFiltros(columnas, registros) {
+      filtrosElemento.replaceChildren();
+      const fragmento = document.createDocumentFragment();
+
+      columnas.forEach(columna => {
+        const celda = document.createElement("th");
+        celda.className = "filtro-celda";
+
+        const selector = document.createElement("select");
+        selector.className = "filtro-select";
+        selector.dataset.columna = columna;
+        selector.setAttribute("aria-label", `Filtrar ${nombreVisible(columna)}`);
+
+        const todos = document.createElement("option");
+        todos.value = "";
+        todos.textContent = "Todos";
+        selector.appendChild(todos);
+
+        const valores = [...new Set(
+          registros
+            .map(registro => mostrarValor(columna, registro[columna]))
+            .filter(Boolean)
+        )].sort((a, b) => a.localeCompare(b, "es", { numeric:true, sensitivity:"base" }));
+
+        valores.forEach(valor => {
+          const opcion = document.createElement("option");
+          opcion.value = valor;
+          opcion.textContent = valor;
+          selector.appendChild(opcion);
+        });
+
+        selector.addEventListener("change", aplicarFiltros);
+        celda.appendChild(selector);
+        fragmento.appendChild(celda);
+      });
+
+      filtrosElemento.appendChild(fragmento);
+    }
+
+    function aplicarFiltros() {
+      const filtrosActivos = [...filtrosElemento.querySelectorAll("select")]
+        .filter(selector => selector.value !== "")
+        .map(selector => ({
+          columna: selector.dataset.columna,
+          valor: selector.value
+        }));
+
+      const registrosFiltrados = registrosOriginales.filter(registro =>
+        filtrosActivos.every(filtro =>
+          mostrarValor(filtro.columna, registro[filtro.columna]) === filtro.valor
+        )
+      );
+
+      construirFilas(columnasActuales, registrosFiltrados);
+
+      cantidadElemento.textContent = filtrosActivos.length
+        ? `${registrosFiltrados.length.toLocaleString("es-UY")} / ${registrosOriginales.length.toLocaleString("es-UY")}`
+        : registrosOriginales.length.toLocaleString("es-UY");
     }
 
     function construirFilas(columnas, registros) {
@@ -237,9 +307,12 @@
         let columnas = Array.isArray(contenido.columnas) ? contenido.columnas : [];
         if (!columnas.length && registros.length) columnas = Object.keys(registros[0]);
         columnas = columnas.filter(columna => String(columna).toLowerCase() !== "nombrefas");
-        construirEncabezados(columnas);
-        construirFilas(columnas, registros);
-        cantidadElemento.textContent = Number(contenido.cantidad_registros ?? registros.length).toLocaleString("es-UY");
+        columnasActuales = columnas;
+        registrosOriginales = registros;
+        construirEncabezados(columnasActuales);
+        construirFiltros(columnasActuales, registrosOriginales);
+        construirFilas(columnasActuales, registrosOriginales);
+        cantidadElemento.textContent = registrosOriginales.length.toLocaleString("es-UY");
         actualizacionElemento.textContent = contenido.actualizado ? `Actualizado: ${contenido.actualizado}` : "Actualización sin fecha informada";
       } catch (error) {
         console.error(error);
