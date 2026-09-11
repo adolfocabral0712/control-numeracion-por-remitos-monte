@@ -29,6 +29,7 @@
     .filtro-select:focus { outline:2px solid #2563eb; outline-offset:1px; }
     td { width:1%; height:32px; padding:6px 7px; white-space:nowrap; text-align:center; line-height:1.35; vertical-align:middle; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; }
     td.celda-color { font-weight:700; border-bottom-color:rgba(15,23,42,.16); }
+    td.fecha-semana { color:#713f12; background:#fde68a; font-weight:700; }
     th:last-child, td:last-child { border-right:0; }
     tbody tr:nth-child(even) { background:var(--alternada); }
     tbody tr:hover { background:var(--hover); }
@@ -103,6 +104,60 @@
       }
 
       return texto;
+    }
+
+    function convertirFechaADias(valor) {
+      const texto = String(valor ?? "").trim();
+      let coincidencia = texto.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+
+      if (coincidencia) {
+        return Math.floor(Date.UTC(
+          Number(coincidencia[1]),
+          Number(coincidencia[2]) - 1,
+          Number(coincidencia[3])
+        ) / 86400000);
+      }
+
+      coincidencia = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+      if (coincidencia) {
+        let anio = Number(coincidencia[3]);
+        if (anio < 100) anio += 2000;
+
+        return Math.floor(Date.UTC(
+          anio,
+          Number(coincidencia[2]) - 1,
+          Number(coincidencia[1])
+        ) / 86400000);
+      }
+
+      return null;
+    }
+
+    function obtenerHoyUruguayEnDias() {
+      const partes = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Montevideo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(new Date());
+
+      const valores = Object.fromEntries(
+        partes.filter(parte => parte.type !== "literal").map(parte => [parte.type, parte.value])
+      );
+
+      return Math.floor(Date.UTC(
+        Number(valores.year),
+        Number(valores.month) - 1,
+        Number(valores.day)
+      ) / 86400000);
+    }
+
+    function estaEnSemanaMovil(valor) {
+      const fecha = convertirFechaADias(valor);
+      if (fecha === null) return false;
+
+      const hoy = obtenerHoyUruguayEnDias();
+      return fecha >= hoy - 7 && fecha <= hoy;
     }
 
     function formatearHora(valor) {
@@ -282,6 +337,13 @@
           const valor = mostrarValor(columna, registro[columna]);
           celda.textContent = valor;
           celda.title = valor;
+
+          if (
+            String(columna).toLowerCase() === "fecharto" &&
+            estaEnSemanaMovil(registro[columna])
+          ) {
+            celda.classList.add("fecha-semana");
+          }
 
           const mapaColumna = mapasColores.get(String(columna).toLowerCase());
           const color = mapaColumna?.get(valor.trim());
