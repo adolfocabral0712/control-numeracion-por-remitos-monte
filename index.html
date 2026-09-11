@@ -25,6 +25,7 @@
     thead { position:sticky; top:0; z-index:10; }
     th { width:1%; padding:9px 7px; white-space:nowrap; text-align:center; color:#fff; background:var(--azul); border-right:1px solid rgba(255,255,255,.25); border-bottom:1px solid var(--azul-oscuro); }
     td { width:1%; padding:7px; white-space:nowrap; text-align:center; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; }
+    td.celda-color { font-weight:700; border-bottom-color:rgba(15,23,42,.16); }
     th:last-child, td:last-child { border-right:0; }
     tbody tr:nth-child(even) { background:var(--alternada); }
     tbody tr:hover { background:var(--hover); }
@@ -71,6 +72,7 @@
     const actualizacionElemento = document.getElementById("actualizacion");
     const cantidadElemento = document.getElementById("cantidad");
     const estadoElemento = document.getElementById("estado");
+    const COLUMNAS_CON_COLOR = new Set(["deposito", "certificacion", "origen", "nombreprod2"]);
 
     const nombreVisible = columna => String(columna).replaceAll("_", " ").toUpperCase();
     function formatearFecha(valor) {
@@ -107,6 +109,33 @@
       if (nombre === "fecharto") return formatearFecha(valor);
       if (nombre === "horarto" || nombre === "horasalida") return formatearHora(valor);
       return String(valor);
+    }
+
+    function crearMapasColores(columnas, registros) {
+      const mapas = new Map();
+
+      columnas.forEach(columna => {
+        const nombre = String(columna).toLowerCase();
+        if (!COLUMNAS_CON_COLOR.has(nombre)) return;
+
+        const valores = [...new Set(
+          registros
+            .map(registro => mostrarValor(columna, registro[columna]).trim())
+            .filter(Boolean)
+        )].sort((a, b) => a.localeCompare(b, "es", { sensitivity:"base" }));
+
+        const colores = new Map();
+        valores.forEach((valor, indice) => {
+          const tono = (indice * 137.508 + 18) % 360;
+          const saturacion = 68 + (indice % 3) * 5;
+          const luminosidad = 82 + (indice % 2) * 5;
+          colores.set(valor, `hsl(${tono.toFixed(2)} ${saturacion}% ${luminosidad}%)`);
+        });
+
+        mapas.set(nombre, colores);
+      });
+
+      return mapas;
     }
 
     function mostrarError(mensaje) {
@@ -148,6 +177,7 @@
         cuerpoElemento.appendChild(fila);
         return;
       }
+      const mapasColores = crearMapasColores(columnas, registros);
       const fragmento = document.createDocumentFragment();
       registros.forEach(registro => {
         const fila = document.createElement("tr");
@@ -156,6 +186,14 @@
           const valor = mostrarValor(columna, registro[columna]);
           celda.textContent = valor;
           celda.title = valor;
+
+          const mapaColumna = mapasColores.get(String(columna).toLowerCase());
+          const color = mapaColumna?.get(valor.trim());
+          if (color) {
+            celda.classList.add("celda-color");
+            celda.style.backgroundColor = color;
+          }
+
           fila.appendChild(celda);
         });
         fragmento.appendChild(fila);
@@ -172,6 +210,7 @@
         const registros = Array.isArray(contenido.datos) ? contenido.datos : [];
         let columnas = Array.isArray(contenido.columnas) ? contenido.columnas : [];
         if (!columnas.length && registros.length) columnas = Object.keys(registros[0]);
+        columnas = columnas.filter(columna => String(columna).toLowerCase() !== "nombrefas");
         construirEncabezados(columnas);
         construirFilas(columnas, registros);
         cantidadElemento.textContent = Number(contenido.cantidad_registros ?? registros.length).toLocaleString("es-UY");
