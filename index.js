@@ -3,15 +3,33 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/datos") {
-      return obtenerDatos(request, env);
+      return obtenerJsonExterno(
+        request,
+        env.CONTROL_REMITOS_JSON_URL,
+        "CONTROL_REMITOS_JSON_URL",
+        "Control-Remitos-Origen/1.0"
+      );
+    }
+
+    if (url.pathname === "/api/fas-remitos") {
+      return obtenerJsonExterno(
+        request,
+        env.FAS_REMITOS_API_URL,
+        "FAS_REMITOS_API_URL",
+        "Control-Remitos-Forestal/1.0"
+      );
     }
 
     return env.ASSETS.fetch(request);
   },
 };
 
-
-async function obtenerDatos(request, env) {
+async function obtenerJsonExterno(
+  request,
+  enlace,
+  nombreSecret,
+  agente
+) {
   if (request.method !== "GET") {
     return respuestaJson(
       {
@@ -21,47 +39,43 @@ async function obtenerDatos(request, env) {
     );
   }
 
-  if (!env.CONTROL_REMITOS_JSON_URL) {
+  if (!enlace) {
     return respuestaJson(
       {
-        error:
-          "No existe el Secret CONTROL_REMITOS_JSON_URL.",
+        error: `No existe el Secret ${nombreSecret}.`,
       },
       500
     );
   }
 
   try {
-    const respuestaOrigen = await fetch(
-      env.CONTROL_REMITOS_JSON_URL,
-      {
-        method: "GET",
+    const origen = await fetch(enlace, {
+      method: "GET",
 
-        headers: {
-          Accept: "application/json",
-          "User-Agent":
-            "Control-Remitos-Origen/1.0",
-        },
+      headers: {
+        Accept: "application/json",
+        "User-Agent": agente,
+      },
 
-        cf: {
-          cacheEverything: false,
-          cacheTtl: 0,
-        },
-      }
-    );
+      cf: {
+        cacheEverything: false,
+        cacheTtl: 0,
+      },
+    });
 
-    if (!respuestaOrigen.ok) {
+    if (!origen.ok) {
       return respuestaJson(
         {
           error:
-            "No fue posible obtener el JSON de origen.",
-          estado_origen: respuestaOrigen.status,
+            "No fue posible obtener la fuente de datos.",
+
+          estado_origen: origen.status,
         },
         502
       );
     }
 
-    const texto = await respuestaOrigen.text();
+    const texto = await origen.text();
 
     try {
       JSON.parse(texto);
@@ -92,10 +106,9 @@ async function obtenerDatos(request, env) {
         "X-Content-Type-Options": "nosniff",
       },
     });
-
   } catch (error) {
     console.error(
-      "Error obteniendo el JSON:",
+      `Error consultando ${nombreSecret}:`,
       error
     );
 
@@ -108,7 +121,6 @@ async function obtenerDatos(request, env) {
     );
   }
 }
-
 
 function respuestaJson(contenido, estado = 200) {
   return new Response(
