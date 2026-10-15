@@ -37,7 +37,7 @@
     const insigniaCruceElemento=document.getElementById("insignia-cruce");
     const COLUMNAS_CON_COLOR=new Set(["deposito","certificacion","origen","nombreprod2"]);
     const COLUMNAS_COLOR_COMPARTIDO=new Set(["cosecha","sacada","carga","carga_api"]);
-    const COLUMNAS_CRUCE=["fecha","remito_origen_api","estado_cruce","rtoorigen_sistema","remito","vehiculo","predio","pila","producto","destino","carga_api","carga"];
+    const COLUMNAS_CRUCE=["fecha","remito_origen_api","estado_cruce","remito","vehiculo","predio","producto","carga_api","carga"];
     let vistaActiva="detalle",columnasActuales=[],registrosOriginales=[],registrosDetalle=[],registrosCruce=[],columnasDetalle=[],actualizadoIngresos="",errorCruce="";
 
     const nombreVisible=columna=>{const n=String(columna).toLowerCase();const d={anio_mes:"AÑO MES",fecha:"FECHA",remito_origen_api:"REMITO ORIGEN API",rtoorigen_sistema:"RTOORIGEN SISTEMA",estado_cruce:"ESTADO",vehiculo:"VEHÍCULO",carga_api:"CARGA API"};return d[n]||String(columna).replaceAll("_"," ").toUpperCase()};
@@ -52,7 +52,17 @@
     function estaEnSemanaMovil(valor){const f=convertirFechaADias(valor);if(f===null)return false;const h=obtenerHoyUruguayEnDias();return f>=h-7&&f<=h}
     function mostrarValor(columna,valor){const n=String(columna).toLowerCase();if(n==="fecharto"||n==="fecha")return formatearFecha(valor);if(n==="horarto"||n==="horasalida")return formatearHora(valor);return textoLimpio(valor)}
     function normalizarRemito(valor){const t=textoLimpio(valor).replace(/^A-/i,"").replace(/\.0+$/,"");return/^\d+$/.test(t)?t.replace(/^0+(?=\d)/,""):""}
-    function normalizarCarga(valor){return textoLimpio(valor).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/\b(SRL|SAS|SA|LTDA)\b/g,"").replace(/[^A-Z0-9]/g,"")}
+    function normalizarCarga(valor){
+      const normalizado=textoLimpio(valor).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/\b(SRL|SAS|SA|LTDA)\b/g,"").replace(/[^A-Z0-9]/g,"");
+      const equivalencias={
+        LECAL:"LECAL",
+        LECALY:"LECAL",
+        CALCERRADALECAL:"LECAL",
+        MULTIFORESTAL:"MULTIFORESTAL",
+        PHELOX:"PHELOX"
+      };
+      return equivalencias[normalizado]||normalizado;
+    }
     function extraerArray(r){if(Array.isArray(r))return r;if(Array.isArray(r?.datos))return r.datos;if(Array.isArray(r?.data))return r.data;if(Array.isArray(r?.results))return r.results;return[]}
     function obtenerCampo(r,nombres){for(const n of nombres)if(Object.prototype.hasOwnProperty.call(r,n))return r[n];return""}
 
