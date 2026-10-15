@@ -4,421 +4,71 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Control de Remitos de Origen</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Cpath d='M17 15h30v34H17z' fill='white'/%3E%3Cpath d='M23 24h18M23 32h18M23 40h12' stroke='%231d4ed8' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
   <style>
-    :root { --azul:#1d4ed8; --azul-oscuro:#163d9f; --azul-suave:#dbeafe; --fondo:#eef2f7; --blanco:#fff; --texto:#172033; --suave:#64748b; --borde:#cbd5e1; --alternada:#f8fafc; --hover:#dbeafe; }
-    * { box-sizing:border-box; }
-    html, body { width:100%; height:100%; margin:0; }
-    body { overflow:hidden; background:var(--fondo); color:var(--texto); font-family:Arial,Helvetica,sans-serif; }
-    .pagina { display:flex; flex-direction:column; width:100%; height:100vh; height:100dvh; padding:16px; gap:12px; }
-    .encabezado { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:15px 18px; background:var(--blanco); border:1px solid var(--borde); border-radius:12px; box-shadow:0 4px 14px rgba(15,23,42,.07); }
-    h1 { margin:0; color:var(--azul-oscuro); font-size:1.35rem; line-height:1.2; }
-    .actualizacion { margin-top:5px; color:var(--suave); font-size:.88rem; }
-    .contador { flex:0 0 auto; min-width:145px; padding:10px 14px; text-align:center; background:var(--azul-suave); color:var(--azul-oscuro); border:1px solid #93c5fd; border-radius:10px; }
-    .contador-numero { display:block; font-size:1.35rem; font-weight:700; }
-    .contador-texto { display:block; margin-top:2px; font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
-    .estado { display:none; flex:0 0 auto; padding:11px 14px; border-radius:8px; font-size:.9rem; font-weight:700; }
-    .estado.visible { display:block; }
-    .estado.error { color:#991b1b; background:#fee2e2; border:1px solid #fca5a5; }
-    .tabla-contenedor { flex:1 1 auto; min-width:0; min-height:0; overflow:auto; scrollbar-gutter:stable; background:var(--blanco); border:1px solid var(--borde); border-radius:12px; box-shadow:0 4px 14px rgba(15,23,42,.07); }
-    table { width:max-content; min-width:max-content; table-layout:auto; border-collapse:separate; border-spacing:0; font-size:calc(.82rem - 2px); }
-    thead { position:sticky; top:0; z-index:10; }
-    th { width:1%; height:36px; padding:8px 7px; white-space:nowrap; text-align:center; line-height:1.35; vertical-align:middle; color:#fff; background:var(--azul); border-right:1px solid rgba(255,255,255,.25); border-bottom:1px solid var(--azul-oscuro); }
-    .filtro-celda { height:34px; padding:4px; background:#dbeafe; border-right:1px solid #bfdbfe; border-bottom:1px solid #93c5fd; }
-    .filtro-select { width:100%; min-width:72px; height:26px; padding:2px 22px 2px 5px; color:#172033; background:#fff; border:1px solid #93c5fd; border-radius:5px; font:inherit; cursor:pointer; }
-    .filtro-select:focus { outline:2px solid #2563eb; outline-offset:1px; }
-    td { width:1%; height:32px; padding:6px 7px; white-space:nowrap; text-align:center; line-height:1.35; vertical-align:middle; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; }
-    td.celda-color { font-weight:700; border-bottom-color:rgba(15,23,42,.16); }
-    td.fecha-semana { color:#713f12; background:#fde68a; font-weight:700; }
-    th:last-child, td:last-child { border-right:0; }
-    tbody tr:nth-child(even) { background:var(--alternada); }
-    tbody tr:hover { background:var(--hover); }
-    .cargando td, .sin-datos td { height:130px; color:var(--suave); font-size:1rem; text-align:center; }
-    .tabla-contenedor::-webkit-scrollbar { width:14px; height:14px; }
-    .tabla-contenedor::-webkit-scrollbar-track { background:#e2e8f0; }
-    .tabla-contenedor::-webkit-scrollbar-thumb { background:#64748b; border:3px solid #e2e8f0; border-radius:10px; }
-    .tabla-contenedor::-webkit-scrollbar-thumb:hover { background:#475569; }
-    @media (max-width:700px) {
-      .pagina { padding:8px; gap:8px; }
-      .encabezado { align-items:stretch; flex-direction:column; padding:12px; gap:10px; }
-      h1, .actualizacion { text-align:center; }
-      h1 { font-size:1.08rem; }
-      .contador { width:100%; }
-      table { font-size:calc(.75rem - 2px); }
-      th { height:34px; padding:7px 6px; }
-      td { height:30px; padding:5px 6px; }
-    }
+    :root{--azul:#1d4ed8;--azul-oscuro:#163d9f;--azul-suave:#dbeafe;--fondo:#eef2f7;--blanco:#fff;--texto:#172033;--suave:#64748b;--borde:#cbd5e1;--alternada:#f8fafc;--hover:#e0ecff}
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}body{overflow:hidden;background:var(--fondo);color:var(--texto);font-family:Arial,Helvetica,sans-serif}
+    .pagina{display:flex;flex-direction:column;width:100%;height:100vh;height:100dvh;padding:14px;gap:10px}.encabezado{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 17px;background:#fff;border:1px solid var(--borde);border-radius:12px;box-shadow:0 4px 14px rgba(15,23,42,.07)}
+    h1{margin:0;color:var(--azul-oscuro);font-size:1.25rem;line-height:1.2}.actualizacion{margin-top:5px;color:var(--suave);font-size:.82rem}.contador{flex:0 0 auto;min-width:150px;padding:9px 13px;text-align:center;background:var(--azul-suave);color:var(--azul-oscuro);border:1px solid #93c5fd;border-radius:10px}.contador.alerta{color:#991b1b;background:#fee2e2;border-color:#fca5a5}.contador-numero{display:block;font-size:1.3rem;font-weight:700}.contador-texto{display:block;margin-top:2px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+    .pestanas{flex:0 0 auto;display:flex;gap:7px;padding:6px;overflow-x:auto;background:#fff;border:1px solid var(--borde);border-radius:10px}.pestana{min-height:34px;padding:7px 14px;white-space:nowrap;color:#334155;background:#f8fafc;border:1px solid #cbd5e1;border-radius:7px;font-weight:700;cursor:pointer}.pestana:hover{background:#e2e8f0}.pestana.activa{color:#fff;background:var(--azul);border-color:var(--azul)}.pestana .insignia{display:inline-block;min-width:22px;margin-left:7px;padding:2px 6px;color:inherit;background:rgba(255,255,255,.2);border-radius:999px;font-size:.72rem}
+    .estado{display:none;flex:0 0 auto;padding:10px 13px;border-radius:8px;font-size:.85rem;font-weight:700}.estado.visible{display:block}.estado.error{color:#991b1b;background:#fee2e2;border:1px solid #fca5a5}.tabla-contenedor{flex:1 1 auto;min-width:0;min-height:0;overflow:auto;scrollbar-gutter:stable;background:#fff;border:1px solid var(--borde);border-radius:12px;box-shadow:0 4px 14px rgba(15,23,42,.07)}
+    table{width:max-content;min-width:max-content;table-layout:auto;border-collapse:separate;border-spacing:0;font-size:calc(.82rem - 2px)}thead{position:sticky;top:0;z-index:10}th{width:1%;height:36px;padding:8px 7px;white-space:nowrap;text-align:center;line-height:1.35;vertical-align:middle;color:#fff;background:var(--azul);border-right:1px solid rgba(255,255,255,.25);border-bottom:1px solid var(--azul-oscuro)}.filtro-celda{height:34px;padding:4px;background:#dbeafe;border-right:1px solid #bfdbfe;border-bottom:1px solid #93c5fd}.filtro-select{width:100%;min-width:72px;height:26px;padding:2px 22px 2px 5px;color:#172033;background:#fff;border:1px solid #93c5fd;border-radius:5px;font:inherit;cursor:pointer}.filtro-select:focus{outline:2px solid #2563eb;outline-offset:1px}
+    td{width:1%;height:32px;padding:6px 7px;white-space:nowrap;text-align:center;line-height:1.35;vertical-align:middle;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0}td.celda-color{font-weight:700;border-bottom-color:rgba(15,23,42,.16)}td.fecha-semana{color:#713f12;background:#fde68a;font-weight:700}th:last-child,td:last-child{border-right:0}tbody tr:nth-child(even){background:var(--alternada)}tbody tr:hover{background:var(--hover)}.cargando td,.sin-datos td{height:125px;color:var(--suave);font-size:.95rem;text-align:center}.tabla-contenedor::-webkit-scrollbar{width:14px;height:14px}.tabla-contenedor::-webkit-scrollbar-track{background:#e2e8f0}.tabla-contenedor::-webkit-scrollbar-thumb{background:#64748b;border:3px solid #e2e8f0;border-radius:10px}
+    @media(max-width:700px){.pagina{padding:7px;gap:7px}.encabezado{align-items:stretch;flex-direction:column;padding:11px;gap:8px}h1,.actualizacion{text-align:center}h1{font-size:1.05rem}.contador{width:100%}.pestanas{padding:5px}.pestana{flex:1 0 auto;font-size:.78rem}table{font-size:calc(.75rem - 2px)}th{height:34px;padding:7px 6px}td{height:30px;padding:5px 6px}}
   </style>
 </head>
 <body>
   <main class="pagina">
-    <header class="encabezado">
-      <div>
-        <h1>Control de Remitos de Origen</h1>
-        <div id="actualizacion" class="actualizacion">Cargando información...</div>
-      </div>
-      <div class="contador">
-        <span id="cantidad" class="contador-numero">0</span>
-        <span class="contador-texto">Registros</span>
-      </div>
-    </header>
+    <header class="encabezado"><div><h1>Control de Remitos de Origen</h1><div id="actualizacion" class="actualizacion">Cargando información...</div></div><div id="contador" class="contador"><span id="cantidad" class="contador-numero">0</span><span id="contador-texto" class="contador-texto">Registros</span></div></header>
+    <nav class="pestanas" aria-label="Vistas del control"><button class="pestana activa" type="button" data-vista="detalle">Detalle de ingresos</button><button class="pestana" type="button" data-vista="cruce">No coinciden con ingreso <span id="insignia-cruce" class="insignia">0</span></button></nav>
     <div id="estado" class="estado" role="alert"></div>
-    <section class="tabla-contenedor" aria-label="Listado de remitos de origen">
-      <table>
-        <thead>
-          <tr id="encabezados"></tr>
-          <tr id="filtros"></tr>
-        </thead>
-        <tbody id="cuerpo-tabla"><tr class="cargando"><td>Cargando datos...</td></tr></tbody>
-      </table>
-    </section>
+    <section class="tabla-contenedor" aria-label="Control de remitos de origen"><table><thead><tr id="encabezados"></tr><tr id="filtros"></tr></thead><tbody id="cuerpo-tabla"><tr class="cargando"><td>Cargando datos...</td></tr></tbody></table></section>
   </main>
   <script>
-    const JSON_URL = "https://dl.dropbox.com/scl/fi/f0s5t8uwgbr275fyggvbk/ControlRemitosOrigen.json?rlkey=k0ygvtoajiwl2x542rpdez1c3&dl=1";
-    const encabezadosElemento = document.getElementById("encabezados");
-    const filtrosElemento = document.getElementById("filtros");
-    const cuerpoElemento = document.getElementById("cuerpo-tabla");
-    const actualizacionElemento = document.getElementById("actualizacion");
-    const cantidadElemento = document.getElementById("cantidad");
-    const estadoElemento = document.getElementById("estado");
-    const COLUMNAS_CON_COLOR = new Set(["deposito", "certificacion", "origen", "nombreprod2"]);
-    const COLUMNAS_COLOR_COMPARTIDO = new Set(["cosecha", "sacada", "carga"]);
-    let columnasActuales = [];
-    let registrosOriginales = [];
+    const URL_INGRESOS="/api/datos";
+    const URL_FAS_REMITOS="/api/fas-remitos";
+    const encabezadosElemento=document.getElementById("encabezados");
+    const filtrosElemento=document.getElementById("filtros");
+    const cuerpoElemento=document.getElementById("cuerpo-tabla");
+    const actualizacionElemento=document.getElementById("actualizacion");
+    const cantidadElemento=document.getElementById("cantidad");
+    const contadorElemento=document.getElementById("contador");
+    const contadorTextoElemento=document.getElementById("contador-texto");
+    const estadoElemento=document.getElementById("estado");
+    const insigniaCruceElemento=document.getElementById("insignia-cruce");
+    const COLUMNAS_CON_COLOR=new Set(["deposito","certificacion","origen","nombreprod2"]);
+    const COLUMNAS_COLOR_COMPARTIDO=new Set(["cosecha","sacada","carga"]);
+    const COLUMNAS_CRUCE=["fecha","remito_origen","predio","pila","vehiculo","producto","destino","carga"];
+    let vistaActiva="detalle",columnasActuales=[],registrosOriginales=[],registrosDetalle=[],registrosCruce=[],columnasDetalle=[],actualizadoIngresos="",errorCruce="";
 
-    const nombreVisible = columna => {
-      if (String(columna).toLowerCase() === "anio_mes") return "AÑO MES";
-      return String(columna).replaceAll("_", " ").toUpperCase();
-    };
-    function formatearFecha(valor) {
-      const texto = String(valor ?? "").trim();
-      if (!texto) return "";
+    const nombreVisible=columna=>{const n=String(columna).toLowerCase();const d={anio_mes:"AÑO MES",fecha:"FECHA",remito_origen:"REMITO ORIGEN",vehiculo:"VEHÍCULO"};return d[n]||String(columna).replaceAll("_"," ").toUpperCase()};
+    function textoLimpio(valor){if(valor===null||valor===undefined)return"";const t=String(valor).trim();return["nan","null","undefined"].includes(t.toLowerCase())?"":t}
+    function formatearFecha(valor){const t=textoLimpio(valor);if(!t)return"";let m=t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return`${m[3].padStart(2,"0")}/${m[2].padStart(2,"0")}/${m[1].slice(-2)}`;m=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);return m?`${m[1].padStart(2,"0")}/${m[2].padStart(2,"0")}/${m[3].slice(-2)}`:t}
+    function formatearAnioMes(valor){const t=textoLimpio(valor);if(!t)return"";const meses=["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];let m=t.match(/^(\d{4})-(\d{1,2})-/);if(m){const mes=Number(m[2]);return mes>=1&&mes<=12?`${m[1]} ${meses[mes-1]}`:""}m=t.match(/^\d{1,2}\/(\d{1,2})\/(\d{2,4})/);if(!m)return"";const mes=Number(m[1]);let anio=m[2];if(anio.length===2)anio=`20${anio}`;return mes>=1&&mes<=12?`${anio} ${meses[mes-1]}`:""}
+    function formatearHora(valor){const t=textoLimpio(valor);if(!t)return"";const m=t.match(/(?:^|[ T])(\d{1,2}):(\d{2})(?::\d{2})?/);return m?`${m[1].padStart(2,"0")}:${m[2]}`:t}
+    function convertirFechaADias(valor){const t=textoLimpio(valor);let m=t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return Math.floor(Date.UTC(+m[1],+m[2]-1,+m[3])/86400000);m=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);if(!m)return null;let a=+m[3];if(a<100)a+=2000;return Math.floor(Date.UTC(a,+m[2]-1,+m[1])/86400000)}
+    function obtenerFechaUruguay(){const p=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Montevideo",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const v=Object.fromEntries(p.filter(x=>x.type!=="literal").map(x=>[x.type,x.value]));return{anio:+v.year,mes:+v.month,dia:+v.day}}
+    function obtenerHoyUruguayEnDias(){const h=obtenerFechaUruguay();return Math.floor(Date.UTC(h.anio,h.mes-1,h.dia)/86400000)}
+    function obtenerLimiteCuatroMesesEnDias(){const h=obtenerFechaUruguay();const f=new Date(Date.UTC(h.anio,h.mes-1,h.dia));f.setUTCMonth(f.getUTCMonth()-4);return Math.floor(f.getTime()/86400000)}
+    function estaEnSemanaMovil(valor){const f=convertirFechaADias(valor);if(f===null)return false;const h=obtenerHoyUruguayEnDias();return f>=h-7&&f<=h}
+    function mostrarValor(columna,valor){const n=String(columna).toLowerCase();if(n==="fecharto"||n==="fecha")return formatearFecha(valor);if(n==="horarto"||n==="horasalida")return formatearHora(valor);return textoLimpio(valor)}
+    function normalizarRemito(valor){const t=textoLimpio(valor).replace(/^A-/i,"").replace(/\.0+$/,"");return/^\d+$/.test(t)?t.replace(/^0+(?=\d)/,""):""}
+    function extraerArray(r){if(Array.isArray(r))return r;if(Array.isArray(r?.datos))return r.datos;if(Array.isArray(r?.data))return r.data;if(Array.isArray(r?.results))return r.results;return[]}
+    function obtenerCampo(r,nombres){for(const n of nombres)if(Object.prototype.hasOwnProperty.call(r,n))return r[n];return""}
 
-      let coincidencia = texto.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-      if (coincidencia) {
-        const [, anio, mes, dia] = coincidencia;
-        return `${dia.padStart(2, "0")}/${mes.padStart(2, "0")}/${anio.slice(-2)}`;
-      }
+    function prepararDetalle(contenido){const fuente=extraerArray(contenido);registrosDetalle=fuente.map(r=>({...r,anio_mes:formatearAnioMes(r.fecharto)}));let columnas=Array.isArray(contenido?.columnas)?[...contenido.columnas]:(registrosDetalle[0]?Object.keys(registrosDetalle[0]):[]);columnas=columnas.filter(c=>!["nombrefas","anio_mes"].includes(String(c).toLowerCase()));const pos=columnas.findIndex(c=>String(c).toLowerCase()==="fecharto");columnas.splice(pos>=0?pos+1:0,0,"anio_mes");columnasDetalle=columnas}
+    function prepararCruce(api,ingresos){const ingresados=new Set(ingresos.map(r=>normalizarRemito(r.rtoorigen)).filter(Boolean));const limite=obtenerLimiteCuatroMesesEnDias(),hoy=obtenerHoyUruguayEnDias(),vistos=new Set();registrosCruce=api.map(r=>{const remito=normalizarRemito(obtenerCampo(r,["NÚMERO.1","NUMERO.1","número.1","numero.1","NÚMERO","NUMERO"]));const fecha=obtenerCampo(r,["FECHA DE CREACIÓN","FECHA DE CREACION","fecha de creación","fecha_creacion"]);return{remito,fechaDias:convertirFechaADias(fecha),anulado:textoLimpio(obtenerCampo(r,["ANULADO POR","anulado_por"])),fila:{fecha,remito_origen:remito,predio:obtenerCampo(r,["PREDIO","predio"]),pila:obtenerCampo(r,["PILA","pila"]),vehiculo:obtenerCampo(r,["VEHÍCULO","VEHICULO","vehiculo"]),producto:obtenerCampo(r,["PRODUCTO","producto"]),destino:obtenerCampo(r,["DESTINO","destino"]),carga:obtenerCampo(r,["CARGA","carga"])}}}).filter(x=>x.remito&&x.fechaDias!==null&&x.fechaDias>=limite&&x.fechaDias<=hoy&&!x.anulado&&!ingresados.has(x.remito)).filter(x=>{if(vistos.has(x.remito))return false;vistos.add(x.remito);return true}).sort((a,b)=>b.fechaDias-a.fechaDias||Number(b.remito)-Number(a.remito)).map(x=>x.fila)}
 
-      coincidencia = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
-      if (coincidencia) {
-        const [, dia, mes, anio] = coincidencia;
-        return `${dia.padStart(2, "0")}/${mes.padStart(2, "0")}/${anio.slice(-2)}`;
-      }
-
-      return texto;
-    }
-
-    function formatearAnioMes(valor) {
-      const texto = String(valor ?? "").trim();
-      if (!texto) return "";
-
-      const meses = [
-        "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO",
-        "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
-      ];
-
-      let coincidencia = texto.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-      if (coincidencia) {
-        const mes = Number(coincidencia[2]);
-        return mes >= 1 && mes <= 12 ? `${coincidencia[1]} ${meses[mes - 1]}` : "";
-      }
-
-      coincidencia = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
-      if (coincidencia) {
-        const mes = Number(coincidencia[2]);
-        let anio = coincidencia[3];
-        if (anio.length === 2) anio = `20${anio}`;
-        return mes >= 1 && mes <= 12 ? `${anio} ${meses[mes - 1]}` : "";
-      }
-
-      return "";
-    }
-
-    function convertirFechaADias(valor) {
-      const texto = String(valor ?? "").trim();
-      let coincidencia = texto.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-
-      if (coincidencia) {
-        return Math.floor(Date.UTC(
-          Number(coincidencia[1]),
-          Number(coincidencia[2]) - 1,
-          Number(coincidencia[3])
-        ) / 86400000);
-      }
-
-      coincidencia = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
-      if (coincidencia) {
-        let anio = Number(coincidencia[3]);
-        if (anio < 100) anio += 2000;
-
-        return Math.floor(Date.UTC(
-          anio,
-          Number(coincidencia[2]) - 1,
-          Number(coincidencia[1])
-        ) / 86400000);
-      }
-
-      return null;
-    }
-
-    function obtenerHoyUruguayEnDias() {
-      const partes = new Intl.DateTimeFormat("en-CA", {
-        timeZone: "America/Montevideo",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit"
-      }).formatToParts(new Date());
-
-      const valores = Object.fromEntries(
-        partes.filter(parte => parte.type !== "literal").map(parte => [parte.type, parte.value])
-      );
-
-      return Math.floor(Date.UTC(
-        Number(valores.year),
-        Number(valores.month) - 1,
-        Number(valores.day)
-      ) / 86400000);
-    }
-
-    function estaEnSemanaMovil(valor) {
-      const fecha = convertirFechaADias(valor);
-      if (fecha === null) return false;
-
-      const hoy = obtenerHoyUruguayEnDias();
-      return fecha >= hoy - 7 && fecha <= hoy;
-    }
-
-    function formatearHora(valor) {
-      const texto = String(valor ?? "").trim();
-      if (!texto) return "";
-      const coincidencia = texto.match(/(?:^|[ T])(\d{1,2}):(\d{2})(?::\d{2})?/);
-      return coincidencia
-        ? `${coincidencia[1].padStart(2, "0")}:${coincidencia[2]}`
-        : texto;
-    }
-
-    function mostrarValor(columna, valor) {
-      if (valor === null || valor === undefined || valor === "") return "";
-      const nombre = String(columna).toLowerCase();
-      if (nombre === "fecharto") return formatearFecha(valor);
-      if (nombre === "anio_mes") return String(valor);
-      if (nombre === "horarto" || nombre === "horasalida") return formatearHora(valor);
-      return String(valor);
-    }
-
-    function crearMapasColores(columnas, registros) {
-      const mapas = new Map();
-
-      const columnasCompartidas = columnas.filter(columna =>
-        COLUMNAS_COLOR_COMPARTIDO.has(String(columna).toLowerCase())
-      );
-
-      const valoresCompartidos = [...new Set(
-        registros.flatMap(registro =>
-          columnasCompartidas.map(columna =>
-            mostrarValor(columna, registro[columna]).trim()
-          )
-        ).filter(Boolean)
-      )].sort((a, b) => a.localeCompare(b, "es", { sensitivity:"base" }));
-
-      const mapaCompartido = new Map();
-      valoresCompartidos.forEach((valor, indice) => {
-        const tono = (indice * 137.508 + 205) % 360;
-        const saturacion = 68 + (indice % 3) * 5;
-        const luminosidad = 82 + (indice % 2) * 5;
-        mapaCompartido.set(valor, `hsl(${tono.toFixed(2)} ${saturacion}% ${luminosidad}%)`);
-      });
-
-      columnasCompartidas.forEach(columna => {
-        mapas.set(String(columna).toLowerCase(), mapaCompartido);
-      });
-
-      columnas.forEach(columna => {
-        const nombre = String(columna).toLowerCase();
-        if (!COLUMNAS_CON_COLOR.has(nombre)) return;
-
-        const valores = [...new Set(
-          registros
-            .map(registro => mostrarValor(columna, registro[columna]).trim())
-            .filter(Boolean)
-        )].sort((a, b) => a.localeCompare(b, "es", { sensitivity:"base" }));
-
-        const colores = new Map();
-        valores.forEach((valor, indice) => {
-          const tono = (indice * 137.508 + 18) % 360;
-          const saturacion = 68 + (indice % 3) * 5;
-          const luminosidad = 82 + (indice % 2) * 5;
-          colores.set(valor, `hsl(${tono.toFixed(2)} ${saturacion}% ${luminosidad}%)`);
-        });
-
-        mapas.set(nombre, colores);
-      });
-
-      return mapas;
-    }
-
-    function mostrarError(mensaje) {
-      encabezadosElemento.replaceChildren();
-      filtrosElemento.replaceChildren();
-      cuerpoElemento.replaceChildren();
-      const fila = document.createElement("tr");
-      fila.className = "sin-datos";
-      const celda = document.createElement("td");
-      celda.textContent = "No fue posible cargar los datos.";
-      fila.appendChild(celda);
-      cuerpoElemento.appendChild(fila);
-      estadoElemento.textContent = mensaje;
-      estadoElemento.className = "estado error visible";
-      actualizacionElemento.textContent = "Información no disponible";
-      cantidadElemento.textContent = "0";
-    }
-
-    function construirEncabezados(columnas) {
-      encabezadosElemento.replaceChildren();
-      const fragmento = document.createDocumentFragment();
-      columnas.forEach(columna => {
-        const th = document.createElement("th");
-        th.scope = "col";
-        th.textContent = nombreVisible(columna);
-        fragmento.appendChild(th);
-      });
-      encabezadosElemento.appendChild(fragmento);
-    }
-
-    function construirFiltros(columnas, registros) {
-      filtrosElemento.replaceChildren();
-      const fragmento = document.createDocumentFragment();
-
-      columnas.forEach(columna => {
-        const celda = document.createElement("th");
-        celda.className = "filtro-celda";
-
-        const selector = document.createElement("select");
-        selector.className = "filtro-select";
-        selector.dataset.columna = columna;
-        selector.setAttribute("aria-label", `Filtrar ${nombreVisible(columna)}`);
-
-        const todos = document.createElement("option");
-        todos.value = "";
-        todos.textContent = "Todos";
-        selector.appendChild(todos);
-
-        const valores = [...new Set(
-          registros
-            .map(registro => mostrarValor(columna, registro[columna]))
-            .filter(Boolean)
-        )].sort((a, b) => a.localeCompare(b, "es", { numeric:true, sensitivity:"base" }));
-
-        valores.forEach(valor => {
-          const opcion = document.createElement("option");
-          opcion.value = valor;
-          opcion.textContent = valor;
-          selector.appendChild(opcion);
-        });
-
-        selector.addEventListener("change", aplicarFiltros);
-        celda.appendChild(selector);
-        fragmento.appendChild(celda);
-      });
-
-      filtrosElemento.appendChild(fragmento);
-    }
-
-    function aplicarFiltros() {
-      const filtrosActivos = [...filtrosElemento.querySelectorAll("select")]
-        .filter(selector => selector.value !== "")
-        .map(selector => ({
-          columna: selector.dataset.columna,
-          valor: selector.value
-        }));
-
-      const registrosFiltrados = registrosOriginales.filter(registro =>
-        filtrosActivos.every(filtro =>
-          mostrarValor(filtro.columna, registro[filtro.columna]) === filtro.valor
-        )
-      );
-
-      construirFilas(columnasActuales, registrosFiltrados);
-
-      cantidadElemento.textContent = filtrosActivos.length
-        ? `${registrosFiltrados.length.toLocaleString("es-UY")} / ${registrosOriginales.length.toLocaleString("es-UY")}`
-        : registrosOriginales.length.toLocaleString("es-UY");
-    }
-
-    function construirFilas(columnas, registros) {
-      cuerpoElemento.replaceChildren();
-      if (!registros.length) {
-        const fila = document.createElement("tr");
-        fila.className = "sin-datos";
-        const celda = document.createElement("td");
-        celda.colSpan = Math.max(columnas.length, 1);
-        celda.textContent = "No hay registros para mostrar.";
-        fila.appendChild(celda);
-        cuerpoElemento.appendChild(fila);
-        return;
-      }
-      const mapasColores = crearMapasColores(columnas, registros);
-      const fragmento = document.createDocumentFragment();
-      registros.forEach(registro => {
-        const fila = document.createElement("tr");
-        columnas.forEach(columna => {
-          const celda = document.createElement("td");
-          const valor = mostrarValor(columna, registro[columna]);
-          celda.textContent = valor;
-          celda.title = valor;
-
-          if (
-            String(columna).toLowerCase() === "fecharto" &&
-            estaEnSemanaMovil(registro[columna])
-          ) {
-            celda.classList.add("fecha-semana");
-          }
-
-          const mapaColumna = mapasColores.get(String(columna).toLowerCase());
-          const color = mapaColumna?.get(valor.trim());
-          if (color) {
-            celda.classList.add("celda-color");
-            celda.style.backgroundColor = color;
-          }
-
-          fila.appendChild(celda);
-        });
-        fragmento.appendChild(fila);
-      });
-      cuerpoElemento.appendChild(fragmento);
-    }
-
-    async function cargarDatos() {
-      try {
-        estadoElemento.className = "estado";
-        const respuesta = await fetch(`${JSON_URL}&t=${Date.now()}`, { cache:"no-store", headers:{ Accept:"application/json" } });
-        if (!respuesta.ok) throw new Error(`Estado ${respuesta.status}`);
-        const contenido = await respuesta.json();
-        const registrosFuente = Array.isArray(contenido.datos) ? contenido.datos : [];
-        const registros = registrosFuente.map(registro => ({
-          ...registro,
-          anio_mes: formatearAnioMes(registro.fecharto)
-        }));
-        let columnas = Array.isArray(contenido.columnas) ? contenido.columnas : [];
-        if (!columnas.length && registros.length) columnas = Object.keys(registros[0]);
-        columnas = columnas.filter(columna => String(columna).toLowerCase() !== "nombrefas");
-        const posicionFecha = columnas.findIndex(columna => String(columna).toLowerCase() === "fecharto");
-        columnas = columnas.filter(columna => String(columna).toLowerCase() !== "anio_mes");
-        columnas.splice(posicionFecha >= 0 ? posicionFecha + 1 : 0, 0, "anio_mes");
-        columnasActuales = columnas;
-        registrosOriginales = registros;
-        construirEncabezados(columnasActuales);
-        construirFiltros(columnasActuales, registrosOriginales);
-        construirFilas(columnasActuales, registrosOriginales);
-        cantidadElemento.textContent = registrosOriginales.length.toLocaleString("es-UY");
-        actualizacionElemento.textContent = contenido.actualizado ? `Actualizado: ${contenido.actualizado}` : "Actualización sin fecha informada";
-      } catch (error) {
-        console.error(error);
-        mostrarError("No se pudo leer el JSON de Dropbox. Comprueba que el enlace continúe siendo público.");
-      }
-    }
-
+    function crearMapaColor(valores,inicio){const mapa=new Map();valores.forEach((v,i)=>{const tono=(i*137.508+inicio)%360,sat=68+(i%3)*5,luz=82+(i%2)*5;mapa.set(v,`hsl(${tono.toFixed(2)} ${sat}% ${luz}%)`)});return mapa}
+    function crearMapasColores(columnas,registros){const mapas=new Map(),comp=columnas.filter(c=>COLUMNAS_COLOR_COMPARTIDO.has(String(c).toLowerCase()));const valores=[...new Set(registros.flatMap(r=>comp.map(c=>mostrarValor(c,r[c]).trim())).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es",{sensitivity:"base"}));const compartido=crearMapaColor(valores,205);comp.forEach(c=>mapas.set(String(c).toLowerCase(),compartido));columnas.forEach(c=>{const n=String(c).toLowerCase();if(!COLUMNAS_CON_COLOR.has(n))return;const v=[...new Set(registros.map(r=>mostrarValor(c,r[c]).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es",{sensitivity:"base"}));mapas.set(n,crearMapaColor(v,18))});return mapas}
+    function construirEncabezados(columnas){encabezadosElemento.replaceChildren();const f=document.createDocumentFragment();columnas.forEach(c=>{const th=document.createElement("th");th.scope="col";th.textContent=nombreVisible(c);f.appendChild(th)});encabezadosElemento.appendChild(f)}
+    function construirFiltros(columnas,registros){filtrosElemento.replaceChildren();const f=document.createDocumentFragment();columnas.forEach(c=>{const th=document.createElement("th");th.className="filtro-celda";const s=document.createElement("select");s.className="filtro-select";s.dataset.columna=c;s.setAttribute("aria-label",`Filtrar ${nombreVisible(c)}`);const todos=document.createElement("option");todos.value="";todos.textContent="Todos";s.appendChild(todos);const valores=[...new Set(registros.map(r=>mostrarValor(c,r[c])).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es",{numeric:true,sensitivity:"base"}));valores.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;s.appendChild(o)});s.addEventListener("change",aplicarFiltros);th.appendChild(s);f.appendChild(th)});filtrosElemento.appendChild(f)}
+    function construirFilas(columnas,registros){cuerpoElemento.replaceChildren();if(!registros.length){const tr=document.createElement("tr");tr.className="sin-datos";const td=document.createElement("td");td.colSpan=Math.max(columnas.length,1);td.textContent=vistaActiva==="cruce"?"No hay remitos pendientes de coincidencia.":"No hay registros para mostrar.";tr.appendChild(td);cuerpoElemento.appendChild(tr);return}const mapas=crearMapasColores(columnas,registrosOriginales),f=document.createDocumentFragment();registros.forEach(r=>{const tr=document.createElement("tr");columnas.forEach(c=>{const td=document.createElement("td"),v=mostrarValor(c,r[c]),n=String(c).toLowerCase();td.textContent=v;td.title=v;if((n==="fecharto"||n==="fecha")&&estaEnSemanaMovil(r[c]))td.classList.add("fecha-semana");const color=mapas.get(n)?.get(v.trim());if(color){td.classList.add("celda-color");td.style.backgroundColor=color}tr.appendChild(td)});f.appendChild(tr)});cuerpoElemento.appendChild(f)}
+    function aplicarFiltros(){const filtros=[...filtrosElemento.querySelectorAll("select")].filter(s=>s.value!=="").map(s=>({columna:s.dataset.columna,valor:s.value}));const filas=registrosOriginales.filter(r=>filtros.every(x=>mostrarValor(x.columna,r[x.columna])===x.valor));construirFilas(columnasActuales,filas);cantidadElemento.textContent=filtros.length?`${filas.length.toLocaleString("es-UY")} / ${registrosOriginales.length.toLocaleString("es-UY")}`:registrosOriginales.length.toLocaleString("es-UY")}
+    function mostrarError(mensaje,limpiar=true){if(limpiar){encabezadosElemento.replaceChildren();filtrosElemento.replaceChildren();cuerpoElemento.replaceChildren()}estadoElemento.textContent=mensaje;estadoElemento.className="estado error visible"}
+    function mostrarVista(vista){vistaActiva=vista;document.querySelectorAll(".pestana").forEach(b=>b.classList.toggle("activa",b.dataset.vista===vista));estadoElemento.className="estado";estadoElemento.textContent="";if(vista==="detalle"){registrosOriginales=registrosDetalle;columnasActuales=columnasDetalle;contadorTextoElemento.textContent="Registros";contadorElemento.classList.remove("alerta");actualizacionElemento.textContent=actualizadoIngresos?`Actualizado: ${actualizadoIngresos}`:"Detalle de ingresos"}else{registrosOriginales=registrosCruce;columnasActuales=COLUMNAS_CRUCE;contadorTextoElemento.textContent="No coinciden";contadorElemento.classList.toggle("alerta",registrosCruce.length>0);actualizacionElemento.textContent="API Forestal contra REMITO ORIGEN · últimos 4 meses · anulados excluidos";if(errorCruce)mostrarError(errorCruce,false)}construirEncabezados(columnasActuales);construirFiltros(columnasActuales,registrosOriginales);construirFilas(columnasActuales,registrosOriginales);cantidadElemento.textContent=registrosOriginales.length.toLocaleString("es-UY")}
+    async function obtenerJson(url){const sep=url.includes("?")?"&":"?";const r=await fetch(`${url}${sep}t=${Date.now()}`,{cache:"no-store",headers:{Accept:"application/json"}});if(!r.ok)throw new Error(`Estado ${r.status}`);return r.json()}
+    async function cargarDatos(){try{const ingresos=await obtenerJson(URL_INGRESOS);actualizadoIngresos=textoLimpio(ingresos.actualizado);prepararDetalle(ingresos);try{const api=await obtenerJson(URL_FAS_REMITOS);prepararCruce(extraerArray(api),registrosDetalle)}catch(e){console.error(e);errorCruce="No fue posible consultar la API de Forestal para realizar el cruce.";registrosCruce=[]}insigniaCruceElemento.textContent=registrosCruce.length.toLocaleString("es-UY");mostrarVista("detalle")}catch(e){console.error(e);mostrarError("No se pudo cargar el JSON de ingresos desde el servidor.");actualizacionElemento.textContent="Información no disponible";cantidadElemento.textContent="0"}}
+    document.querySelectorAll(".pestana").forEach(b=>b.addEventListener("click",()=>mostrarVista(b.dataset.vista)));
     cargarDatos();
   </script>
 </body>
