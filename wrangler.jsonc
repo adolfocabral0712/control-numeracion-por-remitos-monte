@@ -1,15 +1,21 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
 
-  "name": "control-numeracion-por-remitos-monte",
+  "name": "control-numeracion-remitos-monte",
 
   "main": "index.js",
 
-  "compatibility_date": "2026-09-11",
+  "compatibility_date": "2026-10-15",
 
   "assets": {
     "directory": "./public",
+
     "binding": "ASSETS",
-    "not_found_handling": "single-page-application"
+
+    "not_found_handling": "single-page-application",
+
+    "run_worker_first": [
+      "/api/*"
+    ]
   }
 }
