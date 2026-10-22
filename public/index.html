@@ -29,7 +29,7 @@
   <script>
     const URL_INGRESOS="/api/datos";
     const URL_FAS_REMITOS="/api/fas-remitos";
-    const VERSION_APP="21/10/2026-2";
+    const VERSION_APP="22/10/2026-1";
     const encabezadosElemento=document.getElementById("encabezados");
     const filtrosElemento=document.getElementById("filtros");
     const cuerpoElemento=document.getElementById("cuerpo-tabla");
@@ -84,7 +84,7 @@
     function esFleteroNoCorresponde(r){const valor=obtenerCampoFlexible(r,["nombre_fletero","NOMBRE FLETERO","nombrefletero"]);return textoLimpio(valor).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9]/g,"")==="NOCORRESPONDE"}
 
     function prepararDetalle(contenido){const fuente=extraerArray(contenido);registrosDetalle=fuente.map(r=>({...r,anio_mes:formatearAnioMes(r.fecharto)}));let columnas=Array.isArray(contenido?.columnas)?[...contenido.columnas]:(registrosDetalle[0]?Object.keys(registrosDetalle[0]):[]);columnas=columnas.filter(c=>!["nombrefas","anio_mes"].includes(String(c).toLowerCase()));const pos=columnas.findIndex(c=>String(c).toLowerCase()==="fecharto");columnas.splice(pos>=0?pos+1:0,0,"anio_mes");columnasDetalle=columnas}
-    function prepararControlNeto(){registrosNeto=registrosDetalle.filter(r=>{const neto=convertirNumero(obtenerCampoFlexible(r,["neto","NETO"]));return neto!==null&&neto<28&&!esFleteroNoCorresponde(r)}).sort((a,b)=>{const fechaB=convertirFechaADias(obtenerCampoFlexible(b,["fecharto","FECHARTO"]))??-Infinity,fechaA=convertirFechaADias(obtenerCampoFlexible(a,["fecharto","FECHARTO"]))??-Infinity;if(fechaB!==fechaA)return fechaB-fechaA;return textoLimpio(obtenerCampoFlexible(b,["horarto","HORARTO"])).localeCompare(textoLimpio(obtenerCampoFlexible(a,["horarto","HORARTO"])),"es",{numeric:true})})}
+    function prepararControlNeto(){registrosNeto=registrosDetalle.filter(r=>{const neto=convertirNumero(obtenerCampoFlexible(r,["neto","NETO"]));return neto!==null&&neto<28&&!esFleteroNoCorresponde(r)}).sort((a,b)=>{const remitoA=convertirNumero(obtenerCampoFlexible(a,["remito","REMITO"])),remitoB=convertirNumero(obtenerCampoFlexible(b,["remito","REMITO"]));if(remitoA!==null&&remitoB!==null&&remitoA!==remitoB)return remitoA-remitoB;if(remitoA!==null&&remitoB===null)return-1;if(remitoA===null&&remitoB!==null)return 1;return textoLimpio(obtenerCampoFlexible(a,["remito","REMITO"])).localeCompare(textoLimpio(obtenerCampoFlexible(b,["remito","REMITO"])),"es",{numeric:true,sensitivity:"base"})})}
     function prepararControlTaras(){
       const porMatricula=new Map();
       const hoy=obtenerHoyUruguayEnDias(),desde=hoy-29;
